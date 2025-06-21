@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calculadora de Resultados - Grupo C</title>
+  <style>
+    :root {
+      --bg-color: #F9FAFB;
+      --text-color: #1F2937;
+      --border-color: #D1D5DB;
+      --header-bg: #FFFFFF;
+      --highlight-row: #E5E7EB;
+      --input-bg: #F3F4F6;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .calculator-container {
+      max-width: 700px;
+      margin: auto;
+      background-color: var(--header-bg);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+    }
+
+    .logo-container {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .logo {
+      max-width: 200px;
+      height: auto;
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--text-color);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 15px;
+      margin-top: 0;
+      margin-bottom: 25px;
+      font-size: 1.5em;
+    }
+
+    .matches {
+      margin-bottom: 25px;
+    }
+
+    .match {
+      display: grid;
+      grid-template-columns: 1fr auto 20px auto 1fr;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      font-size: 1.1em;
+    }
+
+    .team-name {
+      font-weight: 500;
+    }
+
+    .team-name.right {
+      text-align: right;
+      justify-content: flex-end;
+    }
+
+    .score-input {
+      width: 60px;
+      height: 40px;
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: bold;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+    }
+
+    .score-input::-webkit-inner-spin-button,
+    .score-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .separator {
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 0.95em;
+    }
+
+    th, td {
+      padding: 14px 10px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      background-color: #F9FAFB;
+      text-transform: uppercase;
+      font-size: 0.85em;
+      color: #6B7280;
+    }
+
+    td.team-col {
+      text-align: left;
+      font-weight: bold;
+    }
+
+    .pos {
+      font-weight: bold;
+      color: #6B7280;
+    }
+
+    tbody tr:nth-child(1),
+    tbody tr:nth-child(2) {
+      background-color: var(--highlight-row);
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator-container">
+    <div class="logo-container">
+      <img class="logo" src="https://www.eltribuno.com/img/estructura/header/svg/tribuno75.svg" alt="Logo El Tribuno">
+    </div>
+    <h2>CALCULADORA GRUPO C</h2>
+
+    <div class="matches">
+      <div class="match">
+        <span class="team-name right">Benfica</span>
+        <input class="score-input" id="score-benfica" type="number" min="0" oninput="updateTable()">
+        <span class="separator">-</span>
+        <input class="score-input" id="score-bayern" type="number" min="0" oninput="updateTable()">
+        <span class="team-name">Bayern</span>
+      </div>
+      <div class="match">
+        <span class="team-name right">Auckland City</span>
+        <input class="score-input" id="score-auckland" type="number" min="0" oninput="updateTable()">
+        <span class="separator">-</span>
+        <input class="score-input" id="score-boca" type="number" min="0" oninput="updateTable()">
+        <span class="team-name">Boca Jrs.</span>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Equipo</th><th>PTS</th><th>PJ</th><th>GF:GC</th><th>DIF</th><th>G</th><th>E</th><th>P</th>
+          </tr>
+        </thead>
+        <tbody id="standings-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const initialStandings = {
+      bayern: { name: "Bayern", pts: 6, pj: 2, gf: 12, gc: 1, g: 2, e: 0, p: 0 },
+      benfica: { name: "Benfica", pts: 4, pj: 2, gf: 8, gc: 2, g: 1, e: 1, p: 0 },
+      boca: { name: "Boca Jrs.", pts: 1, pj: 2, gf: 3, gc: 4, g: 0, e: 1, p: 1 },
+      auckland: { name: "Auckland City", pts: 0, pj: 2, gf: 0, gc: 16, g: 0, e: 0, p: 2 }
+    };
+
+    function updateTable() {
+      let teams = JSON.parse(JSON.stringify(initialStandings));
+
+      const scoreBenfica = parseInt(document.getElementById("score-benfica").value);
+      const scoreBayern = parseInt(document.getElementById("score-bayern").value);
+      if (!isNaN(scoreBenfica) && !isNaN(scoreBayern)) {
+        teams.benfica.pj++; teams.bayern.pj++;
+        teams.benfica.gf += scoreBenfica; teams.benfica.gc += scoreBayern;
+        teams.bayern.gf += scoreBayern; teams.bayern.gc += scoreBenfica;
+        if (scoreBenfica > scoreBayern) { teams.benfica.pts += 3; teams.benfica.g++; teams.bayern.p++; }
+        else if (scoreBayern > scoreBenfica) { teams.bayern.pts += 3; teams.bayern.g++; teams.benfica.p++; }
+        else { teams.benfica.pts++; teams.bayern.pts++; teams.benfica.e++; teams.bayern.e++; }
+      }
+
+      const scoreAuckland = parseInt(document.getElementById("score-auckland").value);
+      const scoreBoca = parseInt(document.getElementById("score-boca").value);
+      if (!isNaN(scoreAuckland) && !isNaN(scoreBoca)) {
+        teams.auckland.pj++; teams.boca.pj++;
+        teams.auckland.gf += scoreAuckland; teams.auckland.gc += scoreBoca;
+        teams.boca.gf += scoreBoca; teams.boca.gc += scoreAuckland;
+        if (scoreAuckland > scoreBoca) { teams.auckland.pts += 3; teams.auckland.g++; teams.boca.p++; }
+        else if (scoreBoca > scoreAuckland) { teams.boca.pts += 3; teams.boca.g++; teams.auckland.p++; }
+        else { teams.auckland.pts++; teams.boca.pts++; teams.auckland.e++; teams.boca.e++; }
+      }
+
+      let standings = Object.values(teams);
+      standings.forEach(team => team.dif = team.gf - team.gc);
+      standings.sort((a, b) =>
+        b.pts - a.pts || b.dif - a.dif || b.gf - a.gf || a.name.localeCompare(b.name)
+      );
+
+      const tbody = document.getElementById("standings-body");
+      tbody.innerHTML = "";
+      standings.forEach((team, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="pos">${i + 1}</td>
+          <td class="team-col">${team.name}</td>
+          <td>${team.pts}</td>
+          <td>${team.pj}</td>
+          <td>${team.gf}:${team.gc}</td>
+          <td>${team.dif > 0 ? "+" : ""}${team.dif}</td>
+          <td>${team.g}</td>
+          <td>${team.e}</td>
+          <td>${team.p}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    window.onload = updateTable;
+  </script>
+</body>
+</html>
